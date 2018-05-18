@@ -1,0 +1,4 @@
+SOURCES = parser.ml lexer.ml main.ml
+RESULT = game
+OCAMLMAKEFILE = /home/isstaff/asai/include/OCamlMakefile
+include $(OCAMLMAKEFILE)
