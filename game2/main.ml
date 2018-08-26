@@ -23,6 +23,14 @@ let idou state houkou chizu_list =
     state.place <- new_place
   with Not_found -> print_endline "そこには行かれません。"
 
+let touch state item =
+  let r = List.assoc state.place state.place_state in
+  if not (List.mem item !r)
+    then print_endline ("ここに" ^ item ^ "はありません。")
+  else
+    if (item="小人の像")
+      then print_endline ("S → ○ S ● / S → ● S ○ / S → ○ ●と書いてある")
+
 (* 以下、動作を処理する関数群 *)
 
 (* 目的：メッセージを表示する *)
@@ -78,23 +86,20 @@ let tojiru item state =
 	        print_endline ("あなたは扉を閉めた。")
     | Closed -> print_endline ("扉はすでに閉まっている。")
 
-	(* 目的：「閉じる」を処理する *)
-	(* tojiru : string -> state_t -> unit *)
-	let statuskaiji state =
-	  match !state.items with
-	    [] -> print_endline "何も持っていない。"
-    | item :: rest ->
-	    print_string item;
-	    List.iter (fun item ->
-	    print_string "と";
-		  print_string item)
-	rest;
-	print_endline("を持っている。");
+(* 目的：「ステータス開示」を処理する *)
+(* statuskaiji : state_t -> unit *)
+let statuskaiji state =
+  match state.items with
+    [] -> print_string "何も持っていない"
+   |item::rest -> print_string item;
+      List.iter (fun item -> print_string "と"; print_string item) rest;
+      print_endline "がある"
 
 (* 目的：入力文に従って動作を行う *)
 (* dispatch : Syntax.t -> state_t -> dousa_list -> chizu_list -> unit *)
 let dispatch input state dousa_list chizu_list = match input with
     Idousuru (houkou) -> idou state houkou chizu_list
+  | Sawaru (mono) -> touch state mono
   | Tadoushi (mokutekigo, tadoushi) ->
       let lst = List.assoc mokutekigo dousa_list in
 		(* この目的語に使える動作のリストを得る *)

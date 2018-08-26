@@ -7,7 +7,7 @@ open Syntax
 /* トークンの定義 */
 %token <string> HOUKOU ITEM TADOUSHI TANDOKUDOUSHI
 /* これらには string 型の値が伴うことを示している */
-%token IE HEYA HE NI KARA SUSUMU HAIRU DERU WO MIRU
+%token IE HEYA HE NI KARA SUSUMU HAIRU DERU WO MIRU SAWARU
 %token EOL
 /* EOL = End Of Line 入力の終わり */
 
@@ -23,10 +23,12 @@ open Syntax
 	   | "家" 方向助詞 "入る"
 	   | "家" "から" "出る"
 	   | "部屋" "から" "出る"
+     |目的語 "に" "触る"
            | 目的語 他動詞
            | 単独動詞
 方向       = "東" | "西" | "南" | "北"
 方向助詞   = "へ" | "に"
+格助詞     ="に"
 目的語     = アイテム "を"
 アイテム   = "鍵" | "ドア" | "サボテン" | "宝"
 他動詞     = "取る" | "置く" | "ノックする" | "開く" | "閉じる"
@@ -68,6 +70,8 @@ bun:
         { raise (Error ("「部屋から」どうする？")) }
 | HEYA
         { raise (Error ("「部屋」にどうする？")) }
+| mokutekigo SAWARU
+        { Sawaru ($1) }
 | mokutekigo TADOUSHI
         { Tadoushi ($1, $2) }
 | mokutekigo
@@ -84,6 +88,8 @@ houkoujoshi:
         { () (* 何も返す必要がない *) }
 
 mokutekigo:
+| ITEM NI
+        { $1 }
 | ITEM WO
         { $1 }
 | ITEM
@@ -103,6 +109,7 @@ any:
 | SUSUMU        { "進む" }
 | HAIRU         { "入る" }
 | DERU          { "出る" }
+| SAWARU        { "触る" }
 | WO            { "を" }
 | ITEM          { $1 }
 | TADOUSHI      { $1 }

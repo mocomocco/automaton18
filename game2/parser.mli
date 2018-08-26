@@ -13,6 +13,7 @@ type token =
   | DERU
   | WO
   | MIRU
+  | SAWARU
   | EOL
 
 val start :
