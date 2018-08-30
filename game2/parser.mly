@@ -7,7 +7,7 @@ open Syntax
 /* トークンの定義 */
 %token <string> HOUKOU ITEM TADOUSHI TANDOKUDOUSHI IRO MEISHISETSUZOKU
 /* これらには string 型の値が伴うことを示している */
-%token IE HEYA HE NI KARA SUSUMU HAIRU DERU WO MIRU SAWARU
+%token IE HEYA HE NI KARA SUSUMU HAIRU DERU WO MIRU SAWARU HOKORA KUROIHEYA SHIROIHEYA
 %token EOL
 /* EOL = End Of Line 入力の終わり */
 
@@ -64,6 +64,36 @@ bun:
         { raise (Error ("「家から」どうする？")) }
 | IE
         { raise (Error ("「家」にどうする？")) }
+| KUROIHEYA houkoujoshi HAIRU
+        { Idousuru ("入") }
+| KUROIHEYA houkoujoshi
+        { raise (Error ("「黒い部屋に」どうする？")) }
+| KUROIHEYA KARA DERU
+        { raise (Error ("黒い部屋から出ることはできない")) }
+| KUROIHEYA KARA
+        { raise (Error ("「黒い部屋から」どうする？")) }
+| KUROIHEYA
+        { raise (Error ("「黒い部屋」にどうする？")) }
+| SHIROIHEYA houkoujoshi HAIRU
+        { raise (Error ("白い部屋に入ることはできない")) }
+| SHIROIHEYA houkoujoshi
+        { raise (Error ("「黒い部屋に」どうする？")) }
+| SHIROIHEYA KARA DERU
+        { Idousuru ("出") }
+| SHIROIHEYA KARA
+        { raise (Error ("「白い部屋から」どうする？")) }
+| SHIROIHEYA
+        { raise (Error ("「白い部屋」にどうする？")) }
+| HOKORA houkoujoshi HAIRU
+        { Idousuru ("入") }
+| HOKORA houkoujoshi
+        { raise (Error ("「祠に」どうする？")) }
+| HOKORA KARA DERU
+        { Idousuru ("出") }
+| HOKORA KARA
+        { raise (Error ("「祠から」どうする？")) }
+| HOKORA
+        { raise (Error ("「祠」にどうする？")) }
 | HEYA KARA DERU
         { Idousuru ("出") }
 | HEYA KARA

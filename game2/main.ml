@@ -9,21 +9,40 @@ type state_t = {
   mutable place : string;				 (* 現在、いる場所 *)
   mutable items : string list;				 (* 持ち物リスト *)
 	  place_state : (string * string list ref) list; (* 各場所にある物 *)
-  mutable door_state : door_state_t;			 (* ドアの状態 *)
+  mutable gold_door_state : door_state_t;			 (* ドアの状態 *)
+  mutable blonds_door_state : door_state_t;			 (* ドアの状態 *)
+  mutable silver_door_state : door_state_t;			 (* ドアの状態 *)
+  mutable pendant_state : string list;			 (* ドアの状態 *)
   mutable hp : int;				(* ヒットポイント（不使用） *)
 }
 
 (* 目的：移動コマンドを処理する *)
 (* idou : state_t -> string -> chizu_list -> unit *)
-let idou state houkou chizu_list =
-  if (houkou = "入" || houkou = "出") && state.door_state <> Open then
-    print_endline "扉が閉まっています。"
-  else try
+let idou state houkou chizu_list =(
+  if (houkou = "入" || houkou = "出") then
+     (if state.place="祠の前" then
+         if  state.blonds_door_state <> Open then
+    	print_endline "扉が閉まっています。"
+         else (state.place <- "黒い部屋";
+         print_endline ("気がつくと、首にペンダントがかかっていた。");
+         print_endline ("ペンダントトップは指も入らないような細い筒状になっていて、中には引換券と書かれた紙が入っている");
+         state.items <- "ペンダント" :: state.items;
+)
+         
+      else if state.place="家の前" then
+         if state.silver_door_state <> Open then
+        print_endline "扉が閉まっています。"
+         else state.place <- "部屋の中"
+      else if state.gold_door_state <> Open && state.place="草原" then
+        print_endline "扉が閉まっています。")
+  else (
+try
     let new_place = List.assoc houkou (List.assoc state.place chizu_list) in
-    state.place <- new_place
-  with Not_found -> print_endline "そこには行かれません。"
+      state.place <- new_place;
+  with Not_found -> print_endline "そこには行かれません。";)
+)
 
-let touch state item =
+let touch item state =
   let r = List.assoc state.place state.place_state in
   if not (List.mem item !r)  then
     if not (List.mem item state.items) then
@@ -31,11 +50,20 @@ let touch state item =
     else
       print_endline ("冷えている")
   else
-    if (item="小人の像")
-      then print_endline ("「いいものあるけど、欲しい？　欲しかったら、白をもらう か 黒をもらう って言いな。」")
+    if (item="小人の像" && state.place="黒い部屋")
+      then print_endline ("「いいものあるけど、欲しい？　欲しかったら、白をあげる か 黒をあげる って言いな。」")
     else
-      if (item="銀の扉" && List.mem item state.items )
+      if (item="銀の扉" && state.place="家の前")
       	then (print_endline ("ツルッとしている"))
+      else if (item="金の扉" && state.place="草原")
+        then (
+           if (List.mem "金の鍵" state.items) then
+                (print_endline ("");print_endline ("気がつくと自室の机の上に突っ伏していた。");
+	print_endline ("時計を見ると朝9時。オートマトンの試験は11時からだ…");
+	print_endline ("君の戦いはこれからだ！");
+                state.place <- "現実世界")
+           else
+                print_endline ("すり抜けた。実体がない"))
 
 (* 以下、動作を処理する関数群 *)
 
@@ -61,11 +89,22 @@ let shiraberu item state =
   let r = (List.assoc state.place state.place_state) in
   if not (List.mem item !r) then
     if (List.mem item state.items) then
-      print_endline ("何もわからなかった。")
+         if (item="ペンダント" && state.place="黒い部屋")
+          then (match state.pendant_state with
+             first::rest->print_endline ("１番上に"^first^"があるのが見える")
+           | [ ] ->print_endline ("空っぽだ"))
+          else
+           print_endline ("何もわからなかった。")
     else
       print_endline("ここに"^item^"はない。")
   else
-    print_endline ("埃をかぶっている")
+           if (item="小人の像" && state.place="黒い部屋")
+             then (print_endline ("『１番、引換券→○引換券● 2番、引換券→●引換券○　3番、引換券→○●　4番、引換券→●○");
+           print_endline ("");
+           print_endline ("引き換えたいときは~番と言ってね』");
+           print_endline ("と背中に貼ってある。");)
+         else
+            print_endline ("埃をかぶっている")
 
 (* 目的：「置く」を処理する *)
 (* oku : string -> state_t -> unit *)
@@ -83,14 +122,31 @@ let hiraku item state =
   let r = List.assoc state.place state.place_state in
   if not (List.mem item !r)
     then print_endline ("ここに" ^ item ^ "はありません。")
-  else match state.door_state with
-      Locked -> if (List.mem "銀の鍵" state.items && item="銀の扉")
-	        then (state.door_state <- Open;
+  else (match state.blonds_door_state with
+      Locked -> if (List.mem "銅の鍵" state.items && item="銅の扉")
+	        then (state.blonds_door_state <- Open;
 		      print_endline ("あなたは扉を開いた。"))
 	        else print_endline ("扉は施錠されている。")
     | Open   -> print_endline ("扉はすでに開いている。")
-    | Closed -> (state.door_state <- Open;
-	         print_endline ("あなたは扉を開いた。"))
+    | Closed -> (state.blonds_door_state <- Open;
+	         print_endline ("あなたは扉を開いた。"));
+			 match state.silver_door_state with
+			Locked -> if (List.mem "銀の鍵" state.items && item="銀の扉")
+					then (state.blonds_door_state <- Open;
+					print_endline ("あなたは扉を開いた。"))
+					else print_endline ("扉は施錠されている。")
+		| Open   -> print_endline ("扉はすでに開いている。")
+		| Closed -> (state.silver_door_state <- Open;
+					 	 print_endline ("あなたは扉を開いた。"));
+			 match state.gold_door_state with
+			Locked -> if (List.mem "金の鍵" state.items && item="金の扉")
+					then (state.blonds_door_state <- Open;
+					print_endline ("あなたは扉を開いた。"))
+					else print_endline ("扉は施錠されている。")
+		| Open   -> print_endline ("扉はすでに開いている。")
+		| Closed -> (state.gold_door_state <- Open;
+						 			print_endline ("あなたは扉を開いた。"));
+)
 
 (* 目的：「閉じる」を処理する *)
 (* tojiru : string -> state_t -> unit *)
@@ -98,11 +154,21 @@ let tojiru item state =
   let r = List.assoc state.place state.place_state in
   if not (List.mem item !r)
     then print_endline ("ここに" ^ item ^ "はありません。")
-  else match state.door_state with
+  else (match state.blonds_door_state with
       Locked -> print_endline ("扉はすでに閉まっている。")
-    | Open   -> state.door_state <- Closed;
+    | Open   -> state.blonds_door_state <- Closed;
 	        print_endline ("あなたは扉を閉めた。")
-    | Closed -> print_endline ("扉はすでに閉まっている。")
+    | Closed -> print_endline ("扉はすでに閉まっている。");
+	      match state.silver_door_state with
+	      Locked -> print_endline ("扉はすでに閉まっている。")
+	  | Open   -> state.silver_door_state <- Closed;
+		       print_endline ("あなたは扉を閉めた。")
+	  | Closed -> print_endline ("扉はすでに閉まっている。");
+		 match state.gold_door_state with
+		 	Locked -> print_endline ("扉はすでに閉まっている。")
+		| Open   -> state.gold_door_state <- Closed;
+		 	 print_endline ("あなたは扉を閉めた。")
+		| Closed -> print_endline ("扉はすでに閉まっている。");)
 
 (* 目的：「ステータス開示」を処理する *)
 (* statuskaiji : state_t -> unit *)
@@ -117,7 +183,16 @@ let statuskaiji state =
 (* dispatch : Syntax.t -> state_t -> dousa_list -> chizu_list -> unit *)
 let dispatch input state dousa_list chizu_list = match input with
     Idousuru (houkou) -> idou state houkou chizu_list
-  | Sawaru (mono) -> touch state mono
+(*  | Sawaru (mono) -> touch state mono*)
+	| Sawaru (mono) ->
+      let lst = List.assoc mono dousa_list in
+		(* この目的語に使える動作のリストを得る *)
+      (try
+	 let thunk = List.assoc "触る" lst in
+	 thunk state (* 動作を実行 *)
+       with Not_found ->
+	     print_endline (mono ^ "を" ^
+          "触ることはできません。"))
   | Tadoushi (mokutekigo, tadoushi) ->
       let lst = List.assoc mokutekigo dousa_list in
 		(* この目的語に使える動作のリストを得る *)
@@ -191,12 +266,15 @@ let _ = try
     place = extract_shuppatsuten world;
     items = extract_shoki_items world;
     place_state = extract_place_state world;
-    door_state = Locked;
+    blonds_door_state = Locked;
+    silver_door_state = Locked;
+    gold_door_state = Locked;
+    pendant_state = ["引換券"];
     hp = 100;
   } in
   (* アクションの対応表 *)
   let action_list = [
-    ("取る", toru); ("置く", oku); ("開く", hiraku); ("閉じる", tojiru);("調べる",shiraberu); ("選ぶ",erabu);
+    ("取る", toru); ("置く", oku); ("開く", hiraku); ("閉じる", tojiru);("調べる",shiraberu); ("選ぶ",erabu); ("触る",touch)
   ] in
   (* 動作 *)
   let dousa_list = extract_dousa_list world action_list message in

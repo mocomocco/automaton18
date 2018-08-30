@@ -16,6 +16,9 @@ type token =
   | WO
   | MIRU
   | SAWARU
+  | HOKORA
+  | KUROIHEYA
+  | SHIROIHEYA
   | EOL
 
 val start :
