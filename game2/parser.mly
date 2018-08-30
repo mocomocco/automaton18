@@ -5,7 +5,7 @@ open Syntax
 
 /* 以降、どういうわけかコメントが C 式になることに注意 */
 /* トークンの定義 */
-%token <string> HOUKOU ITEM TADOUSHI TANDOKUDOUSHI
+%token <string> HOUKOU ITEM TADOUSHI TANDOKUDOUSHI IRO MEISHISETSUZOKU
 /* これらには string 型の値が伴うことを示している */
 %token IE HEYA HE NI KARA SUSUMU HAIRU DERU WO MIRU SAWARU
 %token EOL
@@ -30,7 +30,7 @@ open Syntax
 方向助詞   = "へ" | "に"
 格助詞     ="に"
 目的語     = アイテム "を"
-アイテム   = "鍵" | "ドア" | "サボテン" | "宝"
+アイテム   = "鍵" | "ドア" | "サボテン" | "宝" |色のアイテム
 他動詞     = "取る" | "置く" | "ノックする" | "開く" | "閉じる"
 単独動詞   = "終了する" |"ステータス"
 
@@ -92,6 +92,10 @@ mokutekigo:
         { $1 }
 | ITEM WO
         { $1 }
+| IRO MEISHISETSUZOKU ITEM NI
+        { $1^$2^$3 }
+| IRO MEISHISETSUZOKU ITEM WO
+        { $1^$2^$3 }
 | ITEM
         { raise (Error ("「" ^ $1 ^ "」をどうする？")) }
 
@@ -105,6 +109,7 @@ any:
 | HEYA          { "部屋" }
 | HE            { "へ" }
 | NI            { "に" }
+| MEISHISETSUZOKU { $1 }
 | KARA          { "から" }
 | SUSUMU        { "進む" }
 | HAIRU         { "入る" }
@@ -112,5 +117,6 @@ any:
 | SAWARU        { "触る" }
 | WO            { "を" }
 | ITEM          { $1 }
+| IRO           { $1 }
 | TADOUSHI      { $1 }
 | TANDOKUDOUSHI { $1 }

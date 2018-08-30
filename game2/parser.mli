@@ -3,6 +3,8 @@ type token =
   | ITEM of (string)
   | TADOUSHI of (string)
   | TANDOKUDOUSHI of (string)
+  | IRO of (string)
+  | MEISHISETSUZOKU of (string)
   | IE
   | HEYA
   | HE

@@ -25,11 +25,17 @@ let idou state houkou chizu_list =
 
 let touch state item =
   let r = List.assoc state.place state.place_state in
-  if not (List.mem item !r)
-    then print_endline ("ここに" ^ item ^ "はありません。")
+  if not (List.mem item !r)  then
+    if not (List.mem item state.items) then
+      print_endline ("ここに" ^ item ^ "はありません。")
+    else
+      print_endline ("冷えている")
   else
     if (item="小人の像")
-      then print_endline ("S → ○ S ● / S → ● S ○ / S → ○ ●と書いてある")
+      then print_endline ("「いいものあるけど、欲しい？　欲しかったら、白をもらう か 黒をもらう って言いな。」")
+    else
+      if (item="銀の扉" && List.mem item state.items )
+      	then (print_endline ("ツルッとしている"))
 
 (* 以下、動作を処理する関数群 *)
 
@@ -49,6 +55,18 @@ let toru item state =
 	r := List.filter (fun i -> i <> item) !r;
 	print_endline ("あなたは" ^ item ^ "を手に入れた！"))
 
+(* 目的：「調べる」を処理する *)
+(* shiraberu : string -> state_t -> unit *)
+let shiraberu item state =
+  let r = (List.assoc state.place state.place_state) in
+  if not (List.mem item !r) then
+    if (List.mem item state.items) then
+      print_endline ("何もわからなかった。")
+    else
+      print_endline("ここに"^item^"はない。")
+  else
+    print_endline ("埃をかぶっている")
+
 (* 目的：「置く」を処理する *)
 (* oku : string -> state_t -> unit *)
 let oku item state =
@@ -66,7 +84,7 @@ let hiraku item state =
   if not (List.mem item !r)
     then print_endline ("ここに" ^ item ^ "はありません。")
   else match state.door_state with
-      Locked -> if List.mem "鍵" state.items
+      Locked -> if (List.mem "銀の鍵" state.items && item="銀の扉")
 	        then (state.door_state <- Open;
 		      print_endline ("あなたは扉を開いた。"))
 	        else print_endline ("扉は施錠されている。")
@@ -114,6 +132,16 @@ let dispatch input state dousa_list chizu_list = match input with
   | Tandokudoushi ("ステータス") -> statuskaiji state
   | Tandokudoushi (tandokudoushi) ->
       print_endline (tandokudoushi ^ "ことはできません。")
+
+(* 目的：「置く」を処理する *)
+(* erabu : string -> state_t -> unit *)
+let erabu item state =
+  let r = List.assoc state.place state.place_state in
+  if not (List.mem item state.items)
+    then print_endline ("あなたは" ^ item ^ "を持っていない。")
+  else (state.items <- List.filter (fun x -> x <> item) state.items;
+	r := item :: !r;
+	print_endline ("あなたは" ^ item ^ "を置いた。"))
 
 (* 目的：現在地の情報を表示する *)
 (* basho_message : state_t -> unit *)
@@ -168,7 +196,7 @@ let _ = try
   } in
   (* アクションの対応表 *)
   let action_list = [
-    ("取る", toru); ("置く", oku); ("開く", hiraku); ("閉じる", tojiru);
+    ("取る", toru); ("置く", oku); ("開く", hiraku); ("閉じる", tojiru);("調べる",shiraberu); ("選ぶ",erabu);
   ] in
   (* 動作 *)
   let dousa_list = extract_dousa_list world action_list message in
